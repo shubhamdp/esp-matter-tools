@@ -37,7 +37,7 @@ jobs:
         pyinstaller --onefile --name esp-matter-mfg-tool -c -p deps -p sources sources/mfg_tool.py
         
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: esp-matter-mfg-tool-${{ matrix.os }}
         path: dist/${{ matrix.artifact_name }}
