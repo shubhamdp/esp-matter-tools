@@ -14,11 +14,11 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: ubuntu-latest
-            artifact_name: esp-matter-mfg-tool
+            artifact_name: esp-matter-mfg-tool-linux
           - os: windows-latest
-            artifact_name: esp-matter-mfg-tool.exe
+            artifact_name: esp-matter-mfg-tool-windows.exe
           - os: macos-latest
-            artifact_name: esp-matter-mfg-tool
+            artifact_name: esp-matter-mfg-tool-macos
 
     steps:
     - uses: actions/checkout@v3
@@ -43,7 +43,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.artifact_name }}
+        name: ${{ matrix.artifact_name }}-${{ matrix.os }}
         path: mfg_tool/dist/${{ matrix.artifact_name }}
         
     - name: Create Release
