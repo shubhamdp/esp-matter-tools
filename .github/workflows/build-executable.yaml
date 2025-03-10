@@ -1,0 +1,53 @@
+name: Build Executables
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: esp-matter-mfg-tool
+          - os: windows-latest
+            artifact_name: esp-matter-mfg-tool.exe
+          - os: macos-latest
+            artifact_name: esp-matter-mfg-tool
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        cd mfg_tool
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install -r requirements.txt
+        
+    - name: Build executable
+      run: |
+        cd mfg_tool
+        pyinstaller --onefile --name esp-matter-mfg-tool-${{ matrix.os }} -c -p deps -p sources sources/mfg_tool.py
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: esp-matter-mfg-tool-${{ matrix.os }}
+        path: mfg_tool/dist/${{ matrix.artifact_name }}
+        
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: mfg_tool/dist/${{ matrix.artifact_name }}
