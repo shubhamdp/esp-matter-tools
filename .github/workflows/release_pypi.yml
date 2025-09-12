@@ -81,6 +81,7 @@ jobs:
         } else {
           Write-Host "Failed to create Windows executable"
           exit 1
+        }
   
     - name: compress Windows executable
       shell: pwsh
