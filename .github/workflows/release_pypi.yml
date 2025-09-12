@@ -71,3 +71,65 @@ jobs:
       with:
         packages-dir: dmv_tool/dist
         skip-existing: true
+
+
+  windows_build_and_upload:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip build setuptools pyinstaller
+    - name: Build esp-matter-mfg-tool on Windows
+      shell: pwsh
+      run: |
+        cd mfg_tool
+        $CURRENT_VERSION = python setup.py --version 2>$null
+        Write-Host "Building esp-matter-mfg-tool version: $CURRENT_VERSION on Windows"
+        python -m pip install -r requirements.txt
+        python -m build
+        if ($LASTEXITCODE -eq 0) {
+          Write-Host "Windows build completed successfully"
+        } else {
+          Write-Host "Windows build failed"
+          exit 1
+        }
+    - name: Create Windows executable
+      shell: pwsh
+      run: |
+        cd mfg_tool
+        Write-Host "Creating Windows executable with PyInstaller"
+        # Add current directory to PYTHONPATH and run PyInstaller with proper module path
+        $env:PYTHONPATH = "."
+        pyinstaller --onefile --name esp-matter-mfg-tool -c --paths . --paths deps --paths sources --hidden-import deps.spake2p --hidden-import deps.mfg_gen --hidden-import deps.generate_setup_payload sources/mfg_tool.py
+        if ($LASTEXITCODE -eq 0) {
+          Write-Host "Windows executable created successfully"
+        } else {
+          Write-Host "Failed to create Windows executable"
+          exit 1
+        }
+  
+    - name: compress Windows executable
+      shell: pwsh
+      run: |
+        cd mfg_tool/dist
+        Compress-Archive -Path esp-matter-mfg-tool.exe -DestinationPath esp-matter-mfg-tool.zip
+    - name: Upload Windows executable
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: esp-matter-mfg-tool-windows-exe
+        path: mfg_tool/dist/esp-matter-mfg-tool.zip
+
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: mfg_tool/dist/esp-matter-mfg-tool.zip
+        title: ${{ github.event.release.tag_name }}
