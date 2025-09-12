@@ -87,7 +87,7 @@ jobs:
       shell: pwsh
       run: |
         cd mfg_tool/dist
-        zip -r esp-matter-mfg-tool.zip esp-matter-mfg-tool.exe
+        Compress-Archive -Path esp-matter-mfg-tool.exe -DestinationPath esp-matter-mfg-tool.zip
 
     - name: Upload Windows executable
       uses: actions/upload-artifact@v4.6.2
